@@ -1,30 +1,51 @@
 ---
-title: "Using ggplot2"
-author: "Solutions"
+title: "Using ggplot2!"
+author: "Katie Jolly"
 date: "November 11, 2017"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    code_folding: show
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# Setting up our project
+
+I'm a huge fan of nonfiction books and documentaries. I've never loved a lot of the big Hollywood movies, but I do enjoy biopics. I find that they give me a good amount of the nonfiction that I enjoy and the drama that makes a blockbuster hit. But, I often find myself a little disappointed in the breadth of biopics available. Most feature a pretty narrow demographic group: straight, white men. Fivethirtyeight did a nice story on this pattern and published the data they used. So, we are going to use that data to write our own story with ggplot! 
+
+### Packages needed
+
+First, we'll need to install a few packages. The`tidyverse` package includes both `readr` and `ggplot2`, two of the packages we will be using. 
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### Data from the web
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Fivethirtyeight publishes a lot of the data they use on [github]("https://github.com/fivethirtyeight/data")! We're going to use their `biopics` data. Fivethirtyeight data is also available in an R package call `fivethirtyeight` but I learned by using their github repo, so that's the method I prefer. Either way will get you the same data! 
 
-```{r cars}
-summary(cars)
+```{r message = FALSE}
+# read in the data from github
+
+biopics <- read_csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/biopics/biopics.csv")
 ```
 
-## Including Plots
+```{r eval = FALSE}
+# if you want to use the R package
 
-You can also embed plots, for example:
+library(fivethirtyeight)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+data(biopics)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Structure of the data
+
+```{r}
+# I find glimpse to be a more readable version of head/str
+
+glimpse(biopics)
+```
+
