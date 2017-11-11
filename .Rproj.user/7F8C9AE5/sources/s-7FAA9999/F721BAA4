@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1510427936307.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3535104494",
+    "id" : "F721BAA4",
+    "lastKnownWriteTime" : 1510427946,
+    "last_content_update" : 1510427946125,
+    "path" : "~/r_ladies/ggplot_1.Rmd",
+    "project_path" : "ggplot_1.Rmd",
+    "properties" : {
+        "cursorPosition" : "1,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
