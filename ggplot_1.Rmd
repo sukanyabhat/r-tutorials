@@ -6,13 +6,13 @@ output:
   html_document:
     toc: true
     toc_float: true
-    theme: cosmo
+    theme: cosmo 
     code_folding: show
 ---
 
 # Setting up our project
 
-I'm a huge fan of nonfiction books and documentaries. I've never loved a lot of the big Hollywood movies, but I do enjoy biopics. I find that they give me a good amount of the nonfiction that I enjoy and the drama that makes a blockbuster hit. But, I often find myself a little disappointed in the breadth of biopics available. Most feature a pretty narrow demographic group: straight, white men. Fivethirtyeight did a nice story on this pattern and published the data they used. So, we are going to use that data to write our own story with ggplot! 
+I'm a huge fan of nonfiction books and documentaries. I've never loved a lot of the big Hollywood movies, but I do enjoy biopics. I find that they give me a good amount of the nonfiction that I enjoy and the drama that makes a blockbuster hit. But, I often find myself a little disappointed in the breadth of biopics available. Most feature a pretty narrow demographic group: straight, white men. Fivethirtyeight did a nice story on this pattern and published the data they used. So, we are going to use that data to write our own story with ggplot! We will start by recreating the graphics from the article ['Straight Outta Compton' is the rare biopic not about white dudes](https://fivethirtyeight.com/features/straight-outta-compton-is-the-rare-biopic-not-about-white-dudes/) and then make some of our own!
 
 ### Packages needed
 
@@ -20,6 +20,7 @@ First, we'll need to install a few packages. The`tidyverse` package includes bot
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(ggthemes)
 ```
 
 
@@ -47,5 +48,127 @@ data(biopics)
 # I find glimpse to be a more readable version of head/str
 
 glimpse(biopics)
+```
+
+# Visualizations
+
+### Looking at race
+
+We will evetually create this graph!
+
+![](race_viz.JPG)
+
+
+
+
+First, we need to decide what variable maps to each aesthetic. In `ggplot`, aesthetics are essentially how variables are mapped to something visual, such as an axis or the color.
+
+#### Setting up the axes
+
+In this graph, it loots like a `count` of total movies is the `y axis` and `year_release` is mapped to the `x axis`. We don't yet have a `count`, but no worries about that!
+
+```{r}
+# first we need to create a variable for that!
+
+ggplot(data = biopics, aes(x= year_release)) # setting our x axis to year_release from the biopics table
+
+```
+
+Nice! Now we have the beginnings of a plot. 
+
+#### Adding a geom layer
+
+Next, we need to add our `geom` layer. This is what the shapes on your plot are (line, point, bar, .....). We are using `geom_bar`! 
+
+```{r}
+ggplot(data = biopics, aes(x= year_release)) +
+  geom_bar() # this will show us a barplot of how many movies total were released in each year
+```
+
+Okay, now we can see that the shape seems right! That's good!
+
+#### Adding colors!
+
+In the fivethirtyeight plot, colors correspond to whether or not the subject was white. We will modify our plot to show that as well (and try to pick the same colors in the process)!
+
+```{r}
+biopics <- biopics %>%
+  mutate(race_plotting = as.factor(ifelse(subject_race == "White", "White subjects", "Nonwhite subjects"))) %>%
+  mutate(race_plotting = as.factor(ifelse(race_known == "Unknown", "Unknown", race_plotting))) # this uses if statements to create a new variable based on our existing ones!
+
+ggplot(data = biopics, aes(x= year_release)) +
+  geom_bar(aes(fill = race_plotting))
+```
+
+Closer! Now let's add a title, subtitle, and axis labels! 
+
+#### Adding labels
+
+```{r}
+ggplot(data = biopics, aes(x= year_release)) +
+  geom_bar(aes(fill = race_plotting)) + 
+  labs(title = "Biopic Subjects Are Mostly White", 
+       subtitle = "Number of white and nonwhite subjects in 676 biopics since 1915", 
+       x = NULL, 
+       y = NULL)
+```
+
+#### Changing colors
+
+Next, we will add a manual scale to change the colors! I searched around using the google color picker to find the closest matches. 
+
+```{r}
+ggplot(data = biopics, aes(x= year_release)) +
+  geom_bar(aes(fill = race_plotting), width = 0.6) + 
+  labs(title = "Biopic Subjects Are Mostly White", 
+       subtitle = "Number of white and nonwhite subjects in 676 biopics since 1915", 
+       x = NULL, 
+       y = NULL ) +
+  scale_fill_manual(values = c("#d847be", "#36bc6c", "#909392")) # I changed the color scale as well as the width of the bars so we can see the colors more easily
+```
+
+#### Changing the final look of the plot
+
+Now we have pretty much all of the elements in place! The last things we will do will focus on the look of the plot. 
+
+First, we want to move the legend to the upper lefthand corner of the plot. 
+
+```{r}
+ggplot(data = biopics, aes(x= year_release)) +
+  geom_bar(aes(fill = race_plotting), width = 0.6) + 
+  labs(title = "Biopic Subjects Are Mostly White", 
+       subtitle = "Number of white and nonwhite subjects in 676 biopics since 1915", 
+       x = NULL, 
+       y = NULL) +
+  scale_fill_manual(values = c("#d847be", "#36bc6c", "#909392"),
+                    labels = c("White subjects", "Nonwhite subjects", "Unknown")) +
+  theme(legend.position = c(.2,.7), 
+        legend.background = element_rect(fill="lightgray",
+                                         size=0.5, 
+                                         linetype="solid", 
+                                         colour ="darkgray"),
+        legend.title = element_blank())
+  
+```
+
+```{r}
+ggplot(data = biopics, aes(x= year_release)) +
+  geom_bar(aes(fill = race_plotting), width = 0.6) + 
+  labs(title = "Biopic Subjects Are Mostly White", 
+       subtitle = "Number of white and nonwhite subjects in 676 biopics since 1915", 
+       x = NULL, 
+       y = NULL) +
+  scale_fill_manual(values = c("#d847be", "#36bc6c", "#909392"),
+                    labels = c("White subjects", "Nonwhite subjects", "Unknown")) +
+  theme_fivethirtyeight() +
+  theme(legend.position = c(.2,.7), 
+        legend.background = element_rect(fill="#eaedeb",
+                                         size=0.5, 
+                                         linetype="solid", 
+                                         colour ="darkgray"),
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = element_text(face = "italic"))
+  
 ```
 
