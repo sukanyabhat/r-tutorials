@@ -52,7 +52,23 @@ glimpse(biopics)
 
 # Visualizations
 
-### Looking at race
+## Notes about `ggplot`
+
+ggplot adheres to the "grammar of graphics" (hence the gg!), 
+or the idea that graphics should have a standard structure the same way that language does. The idea is to allow
+people to use the standard structure of plots to move beyond standard graphics. It was largely popularized by Hadley
+Wickham after being introduced by Leland Wilkinson in 1999. In 2016, `ggplot2` was the fifth
+most downloaded package for `R`.
+
+Essentially the grammar of graphics uses layering to create plots. You first start with your mapping of which 
+variables map to which `aesthetics` on your plot. Then you specify the `geom` or method of displaying the data, such
+as a point or bar. After that you get into the design elements. That's of course a very brief overview, but you'll
+see how we can use that structure in this tutorial! 
+
+A great resource for `ggplot` is this [Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
+and as with everything else in R, a little googling will get you a long way. 
+
+## Looking at race
 
 We will evetually create this graph!
 
@@ -187,7 +203,7 @@ ggplot(data = race_plot, aes(x= year_release, y = total)) +
 Ta-da! Done! That wasn't so bad, right? On to our next viz! 
 
 
-### Looking at gender
+## Looking at gender
 
 We will follow pretty similar steps for our next viz, so I'm going to move a little more quickly through the steps. Refer back to the previous explanations if you get stuck, or feel free to shout out questions! 
 
@@ -270,5 +286,26 @@ g <- g +
         legend.text = element_text(face = "italic"))
   
 g
+```
+
+Nice! Now we've finished recreating the two graphics from the article, but there are so many others. We'll walk through creating one more. To combine the previous two graphs (and learn a new feature of ggplot!), we'll make a plot of gender and race in biopics. The article claims that women of color are by far the most underrepresented, so this plot will allow us to see that pattern.
+
+## Race and gender, together
+
+For this plot, we don't have an image of the goal we are working towards. In the end we want to have two side by side plots of race in biopics. 
+
+But, we have a slight numerical problem. As we saw in the gender plot, men are way more represented. So it will be hard to compare racial patterns between men and women when we are comparing on different scales. Instead we want to use percentages, so we will fix that problem with `dplyr`!
+
+```{r}
+race_and_gender <- biopics %>% # start with our original data
+  group_by(subject_sex, race_plotting) %>% # group it by race and gender
+  summarise(count = n()) %>% # calculate the number in each group
+   mutate(prop = count/sum(count)) # calculate relative frequency
+  
+```
+
+
+```{r}
+
 ```
 
