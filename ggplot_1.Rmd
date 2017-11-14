@@ -93,22 +93,32 @@ In the fivethirtyeight plot, colors correspond to whether or not the subject was
 
 ```{r}
 biopics <- biopics %>%
-  mutate(race_plotting = as.factor(ifelse(subject_race == "White", "White subjects", "Nonwhite subjects"))) %>%
-  mutate(race_plotting = as.factor(ifelse(race_known == "Unknown", "Unknown", race_plotting))) # this uses if statements to create a new variable based on our existing ones!
+  mutate(race_plotting = ifelse(subject_race == "White", "White subjects", "Nonwhite subjects")) %>%
+  mutate(race_plotting = ifelse(race_known == "Unknown", "Unknown", race_plotting)) # this uses if statements to create a new variable based on our existing ones!
 
-ggplot(data = biopics, aes(x= year_release)) +
-  geom_bar(aes(fill = race_plotting))
+# we also way to change the organization of our data. I find it easiest to group by race category and year of release and then summarize by counting the total in each group
+
+race_plot <- biopics %>% 
+  group_by(year_release, race_plotting) %>% 
+  summarize(total = n())
+
+race_plot$race_plotting <- factor(race_plot$race_plotting, levels = c("White subjects", "Nonwhite subjects", "Unknown"))
 ```
 
-Closer! Now let's add a title, subtitle, and axis labels! 
+```{r}
+ggplot(data = race_plot, aes(x= year_release, y = total)) +
+  geom_bar(aes(fill = race_plotting), stat = "identity") # stat="identity" argument allows us to map to a y aesthetic with geom_bar! 
+```
+
+Closer! Now let's add a title, subtitle, and axis labels! One quick note about the subtitle: `fivethirtyeight` filtered out some of their data. We have 761 biopics in this data so that's the value we will use instead of 676. 
 
 #### Adding labels
 
 ```{r}
-ggplot(data = biopics, aes(x= year_release)) +
-  geom_bar(aes(fill = race_plotting)) + 
+ggplot(data = race_plot, aes(x= year_release, y = total)) +
+  geom_bar(aes(fill = race_plotting), stat = "identity") + 
   labs(title = "Biopic Subjects Are Mostly White", 
-       subtitle = "Number of white and nonwhite subjects in 676 biopics since 1915", 
+       subtitle = "Number of white and nonwhite subjects in 761 biopics since 1915", 
        x = NULL, 
        y = NULL)
 ```
@@ -118,12 +128,12 @@ ggplot(data = biopics, aes(x= year_release)) +
 Next, we will add a manual scale to change the colors! I searched around using the google color picker to find the closest matches. 
 
 ```{r}
-ggplot(data = biopics, aes(x= year_release)) +
-  geom_bar(aes(fill = race_plotting), width = 0.6) + 
+ggplot(data = race_plot, aes(x= year_release, y = total)) +
+  geom_bar(aes(fill = race_plotting), stat = "identity") + 
   labs(title = "Biopic Subjects Are Mostly White", 
-       subtitle = "Number of white and nonwhite subjects in 676 biopics since 1915", 
+       subtitle = "Number of white and nonwhite subjects in 761 biopics since 1915", 
        x = NULL, 
-       y = NULL ) +
+       y = NULL) +
   scale_fill_manual(values = c("#d847be", "#36bc6c", "#909392")) # I changed the color scale as well as the width of the bars so we can see the colors more easily
 ```
 
@@ -134,14 +144,13 @@ Now we have pretty much all of the elements in place! The last things we will do
 First, we want to move the legend to the upper lefthand corner of the plot. 
 
 ```{r}
-ggplot(data = biopics, aes(x= year_release)) +
-  geom_bar(aes(fill = race_plotting), width = 0.6) + 
+ggplot(data = race_plot, aes(x= year_release, y = total)) +
+  geom_bar(aes(fill = race_plotting), stat = "identity", width = 0.6) + 
   labs(title = "Biopic Subjects Are Mostly White", 
-       subtitle = "Number of white and nonwhite subjects in 676 biopics since 1915", 
+       subtitle = "Number of white and nonwhite subjects in 761 biopics since 1915", 
        x = NULL, 
        y = NULL) +
-  scale_fill_manual(values = c("#d847be", "#36bc6c", "#909392"),
-                    labels = c("White subjects", "Nonwhite subjects", "Unknown")) +
+  scale_fill_manual(values = c("#d847be", "#36bc6c", "#909392")) +
   theme(legend.position = c(.2,.7), 
         legend.background = element_rect(fill="lightgray",
                                          size=0.5, 
@@ -151,15 +160,19 @@ ggplot(data = biopics, aes(x= year_release)) +
   
 ```
 
+One nice trick with ggplot is the package `ggthemes`. It has preloaded templates for different popular press outlets and plotting tools. Lucky for us, there's a `fivethirtyeight` theme. We'll use that to make our lives a little easier, but you could style it the same way with your own `ggplot` code! In this case, though, why reinvent the wheel?
+
+Notice in the code below that `theme_fivethirtyeight` has to come before our `theme` arguments. We want to override a few defaults from `ggtheme` and `R` executes code sequentially. If you write them in the other order, you'll be overriding our overrides. 
+
+
 ```{r}
-ggplot(data = biopics, aes(x= year_release)) +
-  geom_bar(aes(fill = race_plotting), width = 0.6) + 
+ggplot(data = race_plot, aes(x= year_release, y = total)) +
+  geom_bar(aes(fill = race_plotting), stat = "identity", width = 0.6) + 
   labs(title = "Biopic Subjects Are Mostly White", 
-       subtitle = "Number of white and nonwhite subjects in 676 biopics since 1915", 
+       subtitle = "Number of white and nonwhite subjects in 761 biopics since 1915", 
        x = NULL, 
        y = NULL) +
-  scale_fill_manual(values = c("#d847be", "#36bc6c", "#909392"),
-                    labels = c("White subjects", "Nonwhite subjects", "Unknown")) +
+  scale_fill_manual(values = c("#d847be", "#36bc6c", "#909392")) +
   theme_fivethirtyeight() +
   theme(legend.position = c(.2,.7), 
         legend.background = element_rect(fill="#eaedeb",
@@ -169,6 +182,93 @@ ggplot(data = biopics, aes(x= year_release)) +
         legend.direction = "vertical",
         legend.title = element_blank(),
         legend.text = element_text(face = "italic"))
+```
+
+Ta-da! Done! That wasn't so bad, right? On to our next viz! 
+
+
+### Looking at gender
+
+We will follow pretty similar steps for our next viz, so I'm going to move a little more quickly through the steps. Refer back to the previous explanations if you get stuck, or feel free to shout out questions! 
+
+First, take a look at our goal for this part of the activity!
+
+![](gender_viz.JPG)
+
+Take a minute to think about how the variables are being mapped to different aesthetics in this plot. What is the x-axis? Y-axis? Color? 
+
+#### Setting up our data
+
+```{r}
+gender_plotting <- biopics %>%
+  group_by(subject_sex,year_release) %>%
+  summarize(total = n()) # this is going to calculate the number of biopics about men and women separately for each year
+```
+
+#### Setting up our axes
+
+```{r}
+ggplot(data = gender_plotting, aes(x = year_release, y = total))
+```
+
+#### Lets add our `geom`!
+
+```{r}
+ggplot(data = gender_plotting, aes(x = year_release, y = total)) +
+  geom_bar(stat = "identity") # don't forget stat = "identity"
+```
+
+#### Adding colors and a legend
+
+```{r}
+# changing the stacking order
+
+gender_plotting$subject_sex <- factor(gender_plotting$subject_sex, levels = c("Male", "Female"))
+
+
+ggplot(data = gender_plotting, aes(x = year_release, y = total, fill = subject_sex)) +
+  geom_bar(stat = "identity") 
+```
+
+We can already see a pretty clear pattern in the data and we've done the hard part of plotting! Now let's make it a little prettier. We will use a lot of the same code from our last plot for the design aspects!
+
+
+#### Design
+
+In this section, I'll introduce saving a plot as a variable so that we don't have to type the same thing over and over. 
+
+```{r}
+# I again changed the width of the bars here
+
+g <- ggplot(data = gender_plotting, aes(x = year_release, y = total, fill = subject_sex)) +
+  geom_bar(stat = "identity", width = 0.6) +
+  labs(title = "Biopic Subjects Are Mostly Male", 
+       subtitle = "Number of male and female subjects in 761 biopics since 1915", 
+       x = NULL, 
+       y = NULL)
+
+g
+
+# add the right colors now!
+
+g <- g +
+  scale_fill_manual(values = c("#f9cd52", "#4304a0"))
+
+g
+
+# format the legend in a better way and add the fivethirtyeight theme!
+g <- g +
+  theme_fivethirtyeight() +
+  theme(legend.position = c(.2,.7), 
+        legend.background = element_rect(fill="#eaedeb",
+                                         size=0.5, 
+                                         linetype="solid", 
+                                         colour ="black"),
+                                          
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = element_text(face = "italic"))
   
+g
 ```
 
