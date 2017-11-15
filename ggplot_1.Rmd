@@ -81,12 +81,26 @@ First, we need to decide what variable maps to each aesthetic. In `ggplot`, aest
 
 #### Setting up the axes
 
-In this graph, it loots like a `count` of total movies is the `y axis` and `year_release` is mapped to the `x axis`. We don't yet have a `count`, but no worries about that!
+To start we need to calculate totals for each racial group in each year. But right now, our `subject_race` variable doesn't quite tell us the information we want. We can combine the information from `race_known` and `subject_race` to get a variable with three levels: `Unknown`, `White subjects`, and `Nonwhite subjects`. 
+
+
+```{r}
+biopics <- biopics %>% # start with our original data
+  mutate(race_plotting = ifelse(race_known == "Unknown", "Unknown", ifelse(subject_race == "White", "White subjects", "Nonwhite subjects"))) # this says, if race_known is unknown, stop there and just mark unknown. But if we know the race, check to see if the race is coded as white. If it is, mark white and stop there. If not, mark nonwhite. 
+
+race_plot <- biopics %>% 
+  group_by(year_release, race_plotting) %>% # we want our calculation of the total to be per racial group, per year
+  summarize(total = n()) # count up the observations in each group!
+
+race_plot$race_plotting <- factor(race_plot$race_plotting, levels = c("White subjects", "Nonwhite subjects", "Unknown")) # change around the order of our factor levels for plotting purposes
+```
+
+In this graph, it loots like a `count` of total movies is the `y axis` and `year_release` is mapped to the `x axis`. 
 
 ```{r}
 # first we need to create a variable for that!
 
-ggplot(data = biopics, aes(x= year_release)) # setting our x axis to year_release from the biopics table
+ggplot(data = race_plot, aes(x= year_release)) # setting our x axis to year_release from the biopics table
 
 ```
 
@@ -97,33 +111,19 @@ Nice! Now we have the beginnings of a plot.
 Next, we need to add our `geom` layer. This is what the shapes on your plot are (line, point, bar, .....). We are using `geom_bar`! 
 
 ```{r}
-ggplot(data = biopics, aes(x= year_release)) +
-  geom_bar() # this will show us a barplot of how many movies total were released in each year
+ggplot(data = race_plot, aes(x = year_release, y = total)) +
+  geom_bar(stat = "identity") # stat="identity" argument allows us to map to a y aesthetic with geom_bar! 
 ```
 
-Okay, now we can see that the shape seems right! That's good!
 
 #### Adding colors!
 
 In the fivethirtyeight plot, colors correspond to whether or not the subject was white. We will modify our plot to show that as well (and try to pick the same colors in the process)!
 
-```{r}
-biopics <- biopics %>%
-  mutate(race_plotting = ifelse(subject_race == "White", "White subjects", "Nonwhite subjects")) %>%
-  mutate(race_plotting = ifelse(race_known == "Unknown", "Unknown", race_plotting)) # this uses if statements to create a new variable based on our existing ones!
-
-# we also way to change the organization of our data. I find it easiest to group by race category and year of release and then summarize by counting the total in each group
-
-race_plot <- biopics %>% 
-  group_by(year_release, race_plotting) %>% 
-  summarize(total = n())
-
-race_plot$race_plotting <- factor(race_plot$race_plotting, levels = c("White subjects", "Nonwhite subjects", "Unknown"))
-```
 
 ```{r}
 ggplot(data = race_plot, aes(x= year_release, y = total)) +
-  geom_bar(aes(fill = race_plotting), stat = "identity") # stat="identity" argument allows us to map to a y aesthetic with geom_bar! 
+  geom_bar(aes(fill = race_plotting), stat = "identity") 
 ```
 
 Closer! Now let's add a title, subtitle, and axis labels! One quick note about the subtitle: `fivethirtyeight` filtered out some of their data. We have 761 biopics in this data so that's the value we will use instead of 676. 
