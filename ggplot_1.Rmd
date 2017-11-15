@@ -1,5 +1,5 @@
 ---
-title: "Using ggplot2!"
+title: "Writing narratives with data: An introduction to ggplot!"
 author: "Katie Jolly"
 date: "November 11, 2017"
 output: 
@@ -292,7 +292,7 @@ Nice! Now we've finished recreating the two graphics from the article, but there
 
 ## Race and gender, together
 
-For this plot, we don't have an image of the goal we are working towards. In the end we want to have two side by side plots of race in biopics. 
+For this plot, we don't have an image of the goal we are working towards. In the end we want to have two side by side plots of race in biopics. To do this we will learn about `facet`, a feature in `ggplot` that allows you to create side by side plots separated by a categorical variable (such as sex). 
 
 But, we have a slight numerical problem. As we saw in the gender plot, men are way more represented. So it will be hard to compare racial patterns between men and women when we are comparing on different scales. Instead we want to use percentages, so we will fix that problem with `dplyr`!
 
@@ -304,8 +304,62 @@ race_and_gender <- biopics %>% # start with our original data
   
 ```
 
+We are going to make a cooler (in my opinion!) version of the bar plot. We'll take advantage of `ggplot` to combine `geom` elements to create something new! We are essentially going to create a lollipop chart.
+
+In this section I'm not going to write the code for the plots as methodically, but I'll be sure to leave plenty of comments!
 
 ```{r}
-
+ggplot(race_and_gender) + # we are going to set our aesthetics in the geoms this time!
+  geom_linerange(aes(x = race_plotting, ymin = 0, ymax = prop-0.01), size = 1) + # add the lines that lead up to the points
+  geom_point(aes(x = race_plotting, y = prop, color = race_plotting), size = 5) + # add a point at the proportion value on the x axis
+  geom_text(aes(x = race_plotting, y = prop + 0.07, label = round(prop, 2))) + # write the proportion 0.07 points above the point (so you can see it better! no overlap)
+  facet_wrap(~subject_sex) + # separate by gender
+  scale_color_manual(values = c("#d847be", "#36bc6c", "#909392")) + # change colors to match the earlier plot
+  theme_fivethirtyeight() +
+  theme(legend.background = element_rect(fill="#eaedeb",
+                                         size=0.5, 
+                                         linetype="solid", 
+                                         colour ="black"),
+                                          
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = element_text(face = "italic")) +
+        labs(title = "Racial representation doesn't vary by gender", subtitle = "Based on data from 761 biopics since 1915", y = "Proportion of biopics")
 ```
 
+To get an idea of magnitude, though, we will also plot the raw values in a similar way! But now we can read those values more critically than we might have before. These two plots together help to tell a very compelling story!
+
+
+```{r}
+# the code for this plot is almost the same as the previous one. the only difference is the y variable! and the labels. 
+
+ggplot(race_and_gender) + # we are going to set our aesthetics in the geoms this time!
+  geom_linerange(aes(x = race_plotting, ymin = 0, ymax = count-0.1), size = 1) +
+  geom_point(aes(x = race_plotting, y = count, color = race_plotting), size = 5) +
+  facet_wrap(~subject_sex) +
+  scale_color_manual(values = c("#d847be", "#36bc6c", "#909392")) +
+  theme_fivethirtyeight() +
+  theme(legend.background = element_rect(fill="#eaedeb",
+                                         size=0.5, 
+                                         linetype="solid", 
+                                         colour ="black"),
+                                          
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = element_text(face = "italic")) +
+  labs(title = "Biopics heavily favor white, male subjects", subtitle = "Based on data from 761 biopics since 1915", y = "Number of biopics")
+```
+
+# Your turn!
+
+Try to create your own data story using the `biopics` data. Some ideas are:
+
+* How does the distribution of box office earnings vary by demographic group?
+
+* How does occupation of subject vary by demographic group?
+
+* Does country of production have an impact on demographics of the subject?
+
+* How about movies with multiple subjects? (some movies are in the table twice for that reason!)
+
+Happy coding!
