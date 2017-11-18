@@ -1,0 +1,292 @@
+---
+title: "Exploring DC's bikeshare system: Wrangling with dplyr!"
+author: "Katie Jolly"
+date: "November 18, 2017"
+output: 
+  html_document:
+      toc: true
+      toc_float: true
+      them: "cosmo"
+---
+
+# Setting up our project
+
+Data wrangling is the process of reconfiguring data so that it's ready for analysis. It's often used with the term data cleaning in the same sentence. So much of analysis is getting your data ready to be analyzed, so it's an important skill to know! It may sound not as exciting, but I like to think of it as a puzzle. I hope you'll have fun with it as well! 
+
+We will use the `dplyr` package, which is part of the `tidyverse` environment (as are `ggplot`, `tidyr`, `readr`, etc). There's a great [Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf) that covers data wrangling with both `dplyr` and `tidyr`, two different but highly related packages. If you get stuck at any point, the cheat sheet is a great first resource! This tutorial assumes at least a working knowledge of `dplyr`, so I'd recommend checking out the cheat sheet if you've never used the package before!
+
+To complete this tutorial, I recommend starting an rmarkdown so you can document your work and hopefully share it later! If you haven't worked with rmarkdown before, this [Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf). For more information about rmarkdown, check out this [documentation](http://rmarkdown.rstudio.com/lesson-1.html). 
+
+For this project we will need to load a few libraries. If you need to first install the library using `install.packages()`. Make sure the name of the package has quotation marks around it! And if RStudio asks if you want to restart R, click yes!
+
+```{r message = FALSE, warning=FALSE}
+# packages we need
+
+library(tidyverse) # this includes ggplot, dplyr, tidyr...
+library(lubridate) # this is for manipulating dates and times
+library(ggmap) # we will make a few maps of the data with this package
+```
+
+
+# Getting the data
+
+We will be working with a random sample of DC bikshare data from 2015 Q1. I got the data from a SQL database through the [bikedata](https://cran.r-project.org/web/packages/bikedata/vignettes/bikedata.html) package. But no worries, I've already compiled all the data you need so that's just for background information. 
+
+Use the code below to read in data I have stored on github!
+
+```{r message = FALSE}
+Trips <- read_csv("https://raw.githubusercontent.com/katiejolly/bikeshare-dplyr/master/dc_bikes_sample_2015Q1.csv") 
+  # this has information about each trip on a bike
+
+Stations <- read_csv("https://raw.githubusercontent.com/katiejolly/bikeshare-dplyr/master/Capital_Bike_Share_Locations.csv") # this has the locations of all the docking stations
+```
+
+## Take a look at the data
+
+Play around with the tables a bit and think about what a row represents and what each variables means. 
+
+Some ways to do this are looking at the `head` and `str` of the data. A handy `tidyverse` way of doing this is the `glimpse` function.
+
+```{r}
+glimpse(Trips)
+
+glimpse(Stations)
+```
+
+# Wrangling
+
+Now that we have an idea of what data is available to us, let's wrangle it! 
+
+## Question 1
+
+For most payment options, it costs extra to travel more than 30 minutes on a bike.
+
+Find the number of trips more than 30 minutes long. Don't just use the duration variable, though! You'll need to do some calculations.
+
+Hint: convert `sdate` and `edate` to date objects and then make variables for the start and end times in decimal form. 
+
+## Question 2
+
+I actually use the DC bikeshare quite a bit. The stations I use the most are `13th St & New York Ave NW`, `MLK Library/9th & G St NW`, and  `Columbia Rd & Georgia Ave NW`. In 2015, I was a casual rider.
+
+### Part a
+
+Find how many other casual riders there were at those stations.
+
+Hint: You'll need to `filter` before your `group_by`
+
+### Part b
+
+On what days of the year were there the most casual riders at those stations?
+
+Hint: Use `as_date(sdate)` to get the date.
+
+### Part c
+
+Which station overall has the highest percent of its ridership in the casual category?
+
+Hint: You'll need to `mutate` and do some calculations and use the `Trips` data. 
+
+## Question 3
+
+### Part a
+
+`Metro Center / 12th & G St NW` is a very popular station for people who bike to work. What are the most common end stations for people who start there?
+
+### Part b
+
+What about people who start at `Smithsonian / Jefferson Dr & 12th St SW`? This station is probably a lot of tourists!
+
+
+### Part c
+
+Map both of these patterns with `ggmap` (written from `ggplot`, so use what you've learned about that package!)
+
+Hint: just add onto your code from (a) to include both start stations. You may want to use `%in%`.
+
+Hint: use a `left_join` with the `Stations` table to get location information!
+
+Start with this code for your map.
+
+```{r eval = FALSE}
+myMap <- get_map(location="Logan Circle",source="google",maptype="roadmap",zoom=13)
+
+ggmap(myMap) + ...
+```
+
+
+# Answers
+
+## Question 1
+
+For this question, let's start by making a new variable for the start and end time. We will use the `lubridate` package for this. 
+
+Right now, the dates are character vectors. Let's make them date objects!
+
+```{r}
+Trips <- Trips %>%
+  mutate(sdate = mdy_hm(sdate), edate = mdy_hm(edate)) # this uses the mdy_hm (for monthdayyear_hourminute) from the lubridate package
+```
+
+Now we can do some calculations with those date objects!
+
+```{r}
+Long_trips <- # create a new data frame
+  Trips %>% # start with the trips data
+  dplyr::mutate(startTime = lubridate::hour(sdate) + lubridate::minute(sdate)/60, 
+         endTime = lubridate::hour(edate) + lubridate::minute(edate)/60) %>% # calculate the start and end time in decimal form. 9:30 will be represented as 9.5, for example.
+  dplyr::mutate(total = endTime-startTime) %>% # find the total duration of the trip in decimal form 
+  filter(total > .5) # find where the duration is greater than 30 min (so, 0.5 in decimal form)
+```
+
+Let's check out our new table.
+
+```{r}
+nrow(Long_trips)
+```
+
+4823 trips were more than 30 minutes long.
+
+```{r}
+nrow(Long_trips)/nrow(Trips)
+```
+
+4.8% of all trips were more than 30 minutes long. 
+
+## Question 2
+
+I actually use the DC bikeshare quite a bit. The stations I use the most are `13th St & New York Ave NW`, `MLK Library/9th & G St NW`, and  `Columbia Rd & Georgia Ave NW`. In 2015, I was a casual rider.
+
+### Part a
+
+Find how many other casual riders there were at those stations.
+
+Hint: You'll need to `filter` before your `group_by`
+
+```{r}
+casual_favoriteStations <- Trips %>% 
+  filter(sstation %in% c('13th St & New York Ave NW', 'MLK Library/9th & G St NW', 'Columbia Rd & Georgia Ave NW')) %>% # filter out the stations we want
+  filter(subscription_type == "Casual") %>% # get just the casual riders (this can be written as just one filter statement if you want)
+  group_by(sstation) %>% # we want our calculations to be per station
+  summarise(casual_riders = n()) # total number of riders at the station over the time period. n() counts obserations in a group
+
+head(casual_favoriteStations)
+```
+
+### Part b
+
+On what days of the year were there the most casual riders at those stations?
+
+Hint: Use `as_date(sdate)` to get the date.
+
+```{r}
+casual_popularDays <- Trips %>% 
+  filter(sstation %in% c('13th St & New York Ave NW', 'MLK Library/9th & G St NW', 'Columbia Rd & Georgia Ave NW')) %>% # filter out the stations we want
+  filter(subscription_type == "Casual") %>% # take out just the casual riders
+  mutate(date = as_date(sdate)) %>% # create a date 
+  group_by(sstation, date) %>% # we want to group by days and stations because that becomes our case in the new table 
+  summarize(casual_riders = n()) %>% # total number of riders on a day at a station
+  arrange(desc(casual_riders)) # arrange it so that the most popular day is at the top
+
+
+head(casual_popularDays)
+```
+
+### Part c
+
+Which station overall has the highest percent of its ridership in the casual category?
+
+Hint: You'll need to `mutate` and do some calculations and use the `Trips` data. 
+
+```{r}
+highestType <-  Trips %>% 
+  group_by(sstation) %>% # per station
+  summarize(casual = sum(subscription_type == "Casual"), reg = sum(subscription_type == "Registered")) %>% # total clients of each type
+  mutate(percentReg = reg / (casual + reg + 20), percentCasual = casual / (casual + reg + 20)) %>%  # percent of each client type 
+  arrange(desc(percentCasual)) # order your data frame by percentCasual highest to lowest
+
+head(highestType)
+
+# as a calculation note, I added 20 to my denominator to mask stations with only a few riders
+```
+
+## Question 3
+
+### Part a
+
+`Metro Center / 12th & G St NW` is a very popular station for people who bike to work. What are the most common end stations for people who start there?
+
+```{r}
+metroCenter <- Trips %>%
+  filter(sstation == "Metro Center / 12th & G St NW") %>% # we only want trips that start at Metro Center
+  group_by(estation) %>% # group the end stations 
+  summarize(trips = n()) %>% # n() counts the number of observations in a group
+  arrange(desc(trips)) # greatest to least trips
+
+head(metroCenter)
+```
+
+### Part b
+
+What about people who start at `Smithsonian / Jefferson Dr & 12th St SW`? This station is probably a lot of tourists!
+
+
+```{r}
+Smithsonian <- Trips %>%
+  filter(sstation =="Smithsonian / Jefferson Dr & 12th St SW") %>% # we only want trips that start at Smithsonian/Jefferson
+  group_by(estation) %>% # group the end stations and start stations
+  summarize(trips = n()) %>% # n() counts the number of observations in a group
+  arrange(desc(trips)) # greatest to least trips
+
+head(Smithsonian)
+```
+
+### Part c
+
+Map both of these patterns with `ggmap` (written from `ggplot`, so use what you've learned about that package!)
+
+Hint: just add onto your code from (a) to include both start stations. You may want to use `%in%`.
+
+Hint: use a `left_join` with the `Stations` table to get location information!
+
+Start with this code for your map.
+
+```{r eval = FALSE}
+myMap <- get_map(location="Logan Circle",source="google",maptype="roadmap",zoom=13)
+
+ggmap(myMap) + ...
+```
+
+```{r include = FALSE}
+myMap <- get_map(location="Logan Circle",source="google",maptype="roadmap",zoom=13)
+```
+
+```{r}
+# make the data frame we will need for mapping
+smithsonianAndMC <- Trips %>%
+  filter(sstation %in% c("Smithsonian / Jefferson Dr & 12th St SW", "Metro Center / 12th & G St NW")) %>% # we want trips from both start stations now!
+  group_by(sstation, estation) %>% # group the end stations and start stations
+  summarize(trips = n()) %>% # n() counts the number of observations in a group
+  left_join(Stations, by = c("estation" = "address")) %>% # join by end station to get its location data
+  arrange(desc(trips))# greatest to least trips
+
+head(smithsonianAndMC)
+```
+
+```{r}
+ggmap(myMap) + # start with the starter code I gave you
+  geom_point(data = smithsonianAndMC, # specify the data you'll use
+             aes(x = long, # longitude
+                 y = lat, # latitude
+                 color = sstation, # we will use color to show the start station
+                 size = trips), # big circles will be stations with lots of trips!
+             alpha = 0.6) +# make the circles a little more transparent so we can see overlap
+            theme(axis.line=element_blank(),
+                  axis.text.x=element_blank(),
+                  axis.text.y=element_blank(),
+                  axis.ticks=element_blank(),
+                  axis.title.x=element_blank(),
+                  axis.title.y=element_blank()) # this is all just to get rid of axis labels
+```
+
+I know this map is a little hard to see, but the data wrangling is more important and this is a good start for a visualization! I can cover better mapping techniques at another time. 
