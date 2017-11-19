@@ -1,5 +1,5 @@
 ---
-title: "Writing narratives with data: An introduction to ggplot!"
+title: "Writing narratives with data: An introduction to ggplot by Katie Jolly!"
 author: "Sukanya Bhat"
 date: "November 18, 2017"
 output: 
@@ -21,6 +21,7 @@ First, we'll need to install a few packages. The`tidyverse` package includes bot
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(ggthemes)
+library(Hmisc)
 ```
 
 
@@ -28,28 +29,26 @@ library(ggthemes)
 
 Fivethirtyeight publishes a lot of the data they use on [github]("https://github.com/fivethirtyeight/data")! We're going to use their `biopics` data. Fivethirtyeight data is also available in an R package call `fivethirtyeight` but I learned by using their github repo, so that's the method I prefer. Either way will get you the same data! 
 
-```{r message = FALSE}
+```{r message = FALSE eval = FALSE}
 # read in the data from github
 
 biopics <- read_csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/biopics/biopics.csv")
 ```
 
-```{r eval = FALSE}
-# if you want to use the R package
-
-library(fivethirtyeight)
-
-data(biopics)
-```
-
 ### Structure of the data
+The describe provides the quickest means of data exploration
 
 ```{r}
-# I find glimpse to be a more readable version of head/str
-
-glimpse(biopics)
+describe(biopics)
 ```
 
+Looking at the data I find these interesting:
+1) Only 668 distinct titles out of 761, so in cases where there are multiple subjects in the same movie, there seems to be multiple rows of data for each subject 
+2) I guessed even the distinct sites would be 668 but its 672, not important, move on
+3) The country of the movie is US UK and Canada
+4) Analysis ranges from 1915 - 2014
+5) Cant make out clearly but are there some blanks in box office?
+6) Race and gender among knowms is roughly in 75-25 proportion
 # Visualizations
 
 ## Notes about `ggplot`
@@ -90,7 +89,7 @@ biopics <- biopics %>% # start with our original data
 
 race_plot <- biopics %>% 
   group_by(year_release, race_plotting) %>% # we want our calculation of the total to be per racial group, per year
-  summarize(total = n()) # count up the observations in each group!
+  summarise(total = n()) # count up the observations in each group!
 
 race_plot$race_plotting <- factor(race_plot$race_plotting, levels = c("White subjects", "Nonwhite subjects", "Unknown")) # change around the order of our factor levels for plotting purposes
 ```
@@ -218,7 +217,7 @@ Take a minute to think about how the variables are being mapped to different aes
 ```{r}
 gender_plotting <- biopics %>%
   group_by(subject_sex,year_release) %>%
-  summarize(total = n()) # this is going to calculate the number of biopics about men and women separately for each year
+  summarise(total = n()) # this is going to calculate the number of biopics about men and women separately for each year
 ```
 
 #### Setting up our axes
