@@ -29,7 +29,7 @@ library(Hmisc)
 
 Fivethirtyeight publishes a lot of the data they use on [github]("https://github.com/fivethirtyeight/data")! We're going to use their `biopics` data. Fivethirtyeight data is also available in an R package call `fivethirtyeight` but I learned by using their github repo, so that's the method I prefer. Either way will get you the same data! 
 
-```{r message = FALSE eval = FALSE}
+```{r message = FALSE}
 # read in the data from github
 
 biopics <- read_csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/biopics/biopics.csv")
