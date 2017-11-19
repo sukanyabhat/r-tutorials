@@ -354,8 +354,22 @@ ggplot(race_and_gender) + # we are going to set our aesthetics in the geoms this
 Try to create your own data story using the `biopics` data. Some ideas are:
 
 * How does the distribution of box office earnings vary by demographic group?
+```{r}
+
+#biopics_based_on_437<-biopics %>% filter(box_office != '-')
+biopics<-biopics %>% mutate(box_office_clean=ifelse(box_office == '-', NA, box_office)) %>% mutate(box_office_clean=gsub("[^0-9\\.]", "",box_office_clean))
+#biopics %>% select(box_office_clean,ends_with('M'))
+ggplot(data=biopics, aes(as.numeric(biopics$box_office_clean))) + geom_density() + facet_wrap(~subject_race,scales = "free_y") 
+
+```
 
 * How does occupation of subject vary by demographic group?
+```{r}
+
+prop.table(table(biopics$type_of_subject,biopics$subject_race))
+
+
+```
 
 * Does country of production have an impact on demographics of the subject?
 
