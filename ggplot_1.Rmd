@@ -1,6 +1,6 @@
 ---
 title: "Writing narratives with data: An introduction to ggplot!"
-author: "Katie Jolly"
+author: "Sukanya Bhat"
 date: "November 11, 2017"
 output: 
   html_document:
