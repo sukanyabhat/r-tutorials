@@ -1,13 +1,13 @@
 ---
 title: "Writing narratives with data: An introduction to ggplot!"
 author: "Sukanya Bhat"
-date: "November 11, 2017"
+date: "November 18, 2017"
 output: 
   html_document:
-    toc: true
-    toc_float: true
-    theme: cosmo 
-    code_folding: show
+    toc: true #table of contents
+    toc_float: true #floating window , http://rmarkdown.rstudio.com/html_document_format.html
+    theme: cosmo # find out what this is
+    code_folding: show # creates a small dropdown which asks you if you want all the code portion to collapse
 ---
 
 # Setting up our project
